@@ -7,8 +7,9 @@ from dash import dcc, html
 
 from app.theme import COLORS
 
-# Shared Plotly config: no modebar and fully static (no zoom/pan/hover).
-STATIC_GRAPH_CONFIG = {"displayModeBar": False, "staticPlot": True}
+# Shared Plotly config: hover tooltips enabled, but no modebar, zoom, pan or
+# scroll-zoom. Zoom/pan is locked via the figure layout (fixedrange + dragmode).
+STATIC_GRAPH_CONFIG = {"displayModeBar": False, "scrollZoom": False, "doubleClick": False}
 
 
 def stat_card(title: str, value: str, subtitle: str | None = None, accent: str = COLORS["primary"]):

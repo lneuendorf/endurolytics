@@ -69,6 +69,7 @@ def _axis() -> dict[str, Any]:
         "linecolor": COLORS["grid"],
         "tickfont": {"color": COLORS["muted"]},
         "title": {"font": {"color": COLORS["muted"]}},
+        "fixedrange": True,
     }
 
 
@@ -86,6 +87,7 @@ def base_layout(
         "colorway": COLORWAY,
         "margin": {"l": 55, "r": 20, "t": 50 if title else 20, "b": 45},
         "hovermode": hovermode,
+        "dragmode": False,
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
