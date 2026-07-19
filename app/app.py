@@ -33,6 +33,8 @@ def create_app() -> Dash:
         __name__,
         suppress_callback_exceptions=True,
     )
+    app.title = "Endurolytics"
+    app._favicon = "logo.svg"
 
     engine = get_engine()
 
