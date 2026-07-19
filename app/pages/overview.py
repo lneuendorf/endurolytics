@@ -16,7 +16,7 @@ from app.components import (
     stat_card,
 )
 from app.data import get_engine, get_weekly_training
-from app.theme import COLORS, LOAD_COLORS, SPORT_COLORS, make_figure
+from app.theme import COLORS, LOAD_COLORS, SPORT_COLORS, make_figure, total_hover_trace
 
 
 def _tsb_accent(tsb: float) -> str:
@@ -33,6 +33,11 @@ def _weekly_tss_figure(weeks: list[dict]) -> go.Figure:
         go.Bar(name="Run", x=weeks_labels, y=[w["run_tss"] or 0 for w in weeks], marker_color=SPORT_COLORS["run"]),
         go.Bar(name="Bike", x=weeks_labels, y=[w["bike_tss"] or 0 for w in weeks], marker_color=SPORT_COLORS["bike"]),
         go.Bar(name="Swim", x=weeks_labels, y=[w["swim_tss"] or 0 for w in weeks], marker_color=SPORT_COLORS["swim"]),
+        total_hover_trace(
+            weeks_labels,
+            [(w["run_tss"] or 0) + (w["bike_tss"] or 0) + (w["swim_tss"] or 0) for w in weeks],
+            "%{y:.0f}",
+        ),
     ]
     fig = make_figure(traces, height=340)
     fig.update_layout(barmode="stack", yaxis_title="TSS", xaxis_title="Week")
@@ -45,6 +50,11 @@ def _weekly_hours_figure(weeks: list[dict]) -> go.Figure:
         go.Bar(name="Run", x=weeks_labels, y=[w["run_hours"] or 0 for w in weeks], marker_color=SPORT_COLORS["run"]),
         go.Bar(name="Bike", x=weeks_labels, y=[w["bike_hours"] or 0 for w in weeks], marker_color=SPORT_COLORS["bike"]),
         go.Bar(name="Swim", x=weeks_labels, y=[w["swim_hours"] or 0 for w in weeks], marker_color=SPORT_COLORS["swim"]),
+        total_hover_trace(
+            weeks_labels,
+            [(w["run_hours"] or 0) + (w["bike_hours"] or 0) + (w["swim_hours"] or 0) for w in weeks],
+            "%{y:.1f}",
+        ),
     ]
     fig = make_figure(traces, height=340)
     fig.update_layout(barmode="stack", yaxis_title="Hours", xaxis_title="Week")

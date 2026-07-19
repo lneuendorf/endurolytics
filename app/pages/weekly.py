@@ -15,7 +15,7 @@ from app.components import (
     slice_weeks,
 )
 from app.data import get_engine, get_weekly_training
-from app.theme import SPORT_COLORS, make_figure
+from app.theme import SPORT_COLORS, make_figure, total_hover_trace
 from app.utils import meters_to_miles, meters_to_yards
 
 
@@ -25,6 +25,11 @@ def _tss_by_sport_figure(weeks: list[dict]) -> go.Figure:
         go.Bar(name="Run", x=labels, y=[w["run_tss"] or 0 for w in weeks], marker_color=SPORT_COLORS["run"]),
         go.Bar(name="Bike", x=labels, y=[w["bike_tss"] or 0 for w in weeks], marker_color=SPORT_COLORS["bike"]),
         go.Bar(name="Swim", x=labels, y=[w["swim_tss"] or 0 for w in weeks], marker_color=SPORT_COLORS["swim"]),
+        total_hover_trace(
+            labels,
+            [(w["run_tss"] or 0) + (w["bike_tss"] or 0) + (w["swim_tss"] or 0) for w in weeks],
+            "%{y:.0f}",
+        ),
     ]
     fig = make_figure(traces, height=360)
     fig.update_layout(barmode="stack", yaxis_title="TSS", xaxis_title="Week")

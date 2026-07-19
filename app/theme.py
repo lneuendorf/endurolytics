@@ -115,3 +115,20 @@ def base_layout(
 def make_figure(traces: list[Any], title: str | None = None, height: int | None = None, **overrides: Any) -> go.Figure:
     """Build a themed ``go.Figure`` from traces."""
     return go.Figure(data=traces, layout=base_layout(title=title, height=height, **overrides))
+
+
+def total_hover_trace(x: list[Any], totals: list[float], number_format: str = "%{y:.0f}") -> go.Scatter:
+    """An invisible trace that adds a "Total" row to a unified (x) hover tooltip.
+
+    Positioned at the top of a stacked bar so the marker is hidden but the value
+    shows in the shared tooltip alongside the individual sport traces.
+    """
+    return go.Scatter(
+        name="Total",
+        x=x,
+        y=totals,
+        mode="markers",
+        marker={"color": "rgba(0,0,0,0)", "size": 0.1},
+        hovertemplate=f"{number_format}<extra>Total</extra>",
+        showlegend=False,
+    )
