@@ -1,0 +1,19 @@
+# Render deployment for the Endurolytics dashboard.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: endurolytics-dashboard
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    # Apply migrations on deploy, then serve the Dash app with gunicorn.
+    startCommand: alembic upgrade head && gunicorn app.app:server --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      # Set to your Neon PostgreSQL connection string in the Render dashboard.
+      - key: DATABASE_URL
+        sync: false

@@ -1,0 +1,10 @@
+garminconnect
+python-dotenv
+SQLAlchemy
+alembic
+psycopg2-binary
+dash
+dash-bootstrap-components
+plotly
+plotly-express
+gunicorn

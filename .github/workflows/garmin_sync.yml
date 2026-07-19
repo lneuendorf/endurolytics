@@ -1,0 +1,53 @@
+name: Garmin sync
+
+on:
+  # Run at the top of every hour (UTC). Adjust as needed.
+  schedule:
+    - cron: "0 * * * *"
+  # Allow manual runs from the Actions tab.
+  workflow_dispatch:
+
+concurrency:
+  group: garmin-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
+      GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      GARMINTOKENS: ${{ github.workspace }}/.garminconnect
+      GARMIN_LOGIN_RETRIES: "3"
+      GARMIN_LOGIN_BACKOFF_SECONDS: "30"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore Garmin auth tokens
+        # Store a base64-encoded token directory (from a successful local login)
+        # in the GARMIN_TOKEN_BASE64 secret so CI can log in without MFA prompts.
+        if: ${{ secrets.GARMIN_TOKEN_BASE64 != '' }}
+        run: |
+          mkdir -p "$GARMINTOKENS"
+          echo "${{ secrets.GARMIN_TOKEN_BASE64 }}" | base64 -d > "$GARMINTOKENS/oauth.tar"
+          tar -xf "$GARMINTOKENS/oauth.tar" -C "$GARMINTOKENS"
+          rm -f "$GARMINTOKENS/oauth.tar"
+
+      - name: Apply database migrations
+        run: alembic upgrade head
+
+      - name: Run Garmin sync and processing
+        run: python -m pipeline.run_sync

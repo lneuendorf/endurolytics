@@ -1,0 +1,8 @@
+*.pyc
+.venv/
+.env
+__pycache__/
+
+# Local database and Garmin auth token cache (never commit these)
+*.db
+.garminconnect/
