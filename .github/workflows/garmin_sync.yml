@@ -19,6 +19,7 @@ jobs:
       GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
       GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      GARMIN_TOKEN_BASE64: ${{ secrets.GARMIN_TOKEN_BASE64 }}
       GARMINTOKENS: ${{ github.workspace }}/.garminconnect
       GARMIN_LOGIN_RETRIES: "3"
       GARMIN_LOGIN_BACKOFF_SECONDS: "30"
@@ -39,10 +40,10 @@ jobs:
       - name: Restore Garmin auth tokens
         # Store a base64-encoded token directory (from a successful local login)
         # in the GARMIN_TOKEN_BASE64 secret so CI can log in without MFA prompts.
-        if: ${{ secrets.GARMIN_TOKEN_BASE64 != '' }}
+        if: ${{ env.GARMIN_TOKEN_BASE64 != '' }}
         run: |
           mkdir -p "$GARMINTOKENS"
-          echo "${{ secrets.GARMIN_TOKEN_BASE64 }}" | base64 -d > "$GARMINTOKENS/oauth.tar"
+          echo "$GARMIN_TOKEN_BASE64" | base64 -d > "$GARMINTOKENS/oauth.tar"
           tar -xf "$GARMINTOKENS/oauth.tar" -C "$GARMINTOKENS"
           rm -f "$GARMINTOKENS/oauth.tar"
 
