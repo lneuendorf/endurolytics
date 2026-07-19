@@ -1,7 +1,7 @@
 import os
 import dash_bootstrap_components as dbc
-from dash import Dash, dcc, html, callback
-from dash.dependencies import Input, Output
+from dash import Dash, dcc, html, callback, ctx
+from dash.dependencies import Input, Output, State
 
 from app.data import get_engine
 # Import pages at module load so their @callback definitions register with Dash
@@ -42,19 +42,26 @@ def create_app() -> Dash:
             dbc.Container(
                 [
                     _brand(app),
-                    dbc.Nav([
-                        dbc.NavLink("Overview", href="/", active="exact"),
-                        dbc.NavLink("Weekly", href="/weekly", active="exact"),
-                        dbc.NavLink("Training Load", href="/training-load", active="exact"),
-                        dbc.NavLink("Activities", href="/activities", active="exact"),
-                        dbc.NavLink("Glossary", href="/glossary", active="exact"),
-                        dbc.NavLink("Settings", href="/settings", active="exact"),
-                    ], navbar=True, className="ms-auto"),
+                    dbc.NavbarToggler(id="navbar-toggler", n_clicks=0),
+                    dbc.Collapse(
+                        dbc.Nav([
+                            dbc.NavLink("Overview", href="/", active="exact"),
+                            dbc.NavLink("Weekly", href="/weekly", active="exact"),
+                            dbc.NavLink("Training Load", href="/training-load", active="exact"),
+                            dbc.NavLink("Activities", href="/activities", active="exact"),
+                            dbc.NavLink("Glossary", href="/glossary", active="exact"),
+                            dbc.NavLink("Settings", href="/settings", active="exact"),
+                        ], navbar=True, className="ms-auto"),
+                        id="navbar-collapse",
+                        is_open=False,
+                        navbar=True,
+                    ),
                 ],
                 fluid=True,
             ),
             color="dark",
             dark=True,
+            expand="lg",
             className="mb-4",
         ),
         html.Div(id="page-content"),
@@ -78,6 +85,19 @@ def create_app() -> Dash:
             return settings.layout(engine)
         # Default overview page
         return overview.layout(engine)
+
+    @app.callback(
+        Output("navbar-collapse", "is_open"),
+        Input("navbar-toggler", "n_clicks"),
+        Input("url", "pathname"),
+        State("navbar-collapse", "is_open"),
+        prevent_initial_call=True,
+    )
+    def toggle_navbar(n_clicks, pathname, is_open):
+        """Open/close the mobile menu; close it after navigating to a page."""
+        if ctx.triggered_id == "url":
+            return False
+        return not is_open
 
     return app
 

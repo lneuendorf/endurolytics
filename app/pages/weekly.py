@@ -9,6 +9,7 @@ from sqlalchemy.engine import Engine
 
 from app.components import (
     DEFAULT_RANGE_WEEKS,
+    STATIC_GRAPH_CONFIG,
     range_selector,
     section_card,
     slice_weeks,
@@ -114,6 +115,6 @@ def update_weekly_content(range_weeks):
         return dbc.Alert("No training data yet.", color="info")
     weeks = slice_weeks(weeks, range_weeks if range_weeks is not None else DEFAULT_RANGE_WEEKS)
     return [
-        section_card("Weekly TSS by Sport", dcc.Graph(figure=_tss_by_sport_figure(weeks), config={"displayModeBar": False})),
+        section_card("Weekly TSS by Sport", dcc.Graph(figure=_tss_by_sport_figure(weeks), config=STATIC_GRAPH_CONFIG)),
         section_card("Weekly Detail", _weekly_table(weeks)),
     ]

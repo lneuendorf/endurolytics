@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import dash_bootstrap_components as dbc
-from dash import html
+from dash import dcc, html
 
 from app.theme import COLORS
+
+# Shared Plotly config: no modebar and fully static (no zoom/pan/hover).
+STATIC_GRAPH_CONFIG = {"displayModeBar": False, "staticPlot": True}
 
 
 def stat_card(title: str, value: str, subtitle: str | None = None, accent: str = COLORS["primary"]):
@@ -37,29 +40,27 @@ def section_card(title: str, children):
 
 # Date-range spans (in weeks) for the trend pages. ``0`` means "all data".
 RANGE_OPTIONS = [
-    {"label": "8 wk", "value": 8},
-    {"label": "12 wk", "value": 12},
-    {"label": "1/2 yr", "value": 26},
-    {"label": "1 yr", "value": 52},
-    {"label": "All", "value": 0},
+    {"label": "8 weeks", "value": 8},
+    {"label": "12 weeks", "value": 12},
+    {"label": "6 months", "value": 26},
+    {"label": "1 year", "value": 52},
+    {"label": "All time", "value": 0},
 ]
 DEFAULT_RANGE_WEEKS = 12
 
 
 def range_selector(control_id: str, default: int = DEFAULT_RANGE_WEEKS):
-    """A pill-style radio group for choosing how many recent weeks to show."""
+    """A compact dropdown for choosing how many recent weeks to show."""
     return html.Div(
         [
             html.Span("Range", className="text-muted small text-uppercase me-2", style={"letterSpacing": "0.04em"}),
-            dbc.RadioItems(
+            dcc.Dropdown(
                 id=control_id,
                 options=RANGE_OPTIONS,
                 value=default,
-                inline=True,
-                className="range-selector d-inline-flex",
-                inputClassName="btn-check",
-                labelClassName="btn btn-outline-secondary btn-sm me-2",
-                labelCheckedClassName="active",
+                clearable=False,
+                searchable=False,
+                className="range-dropdown",
             ),
         ],
         className="d-flex align-items-center mb-3",

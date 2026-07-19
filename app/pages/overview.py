@@ -9,6 +9,7 @@ from sqlalchemy.engine import Engine
 
 from app.components import (
     DEFAULT_RANGE_WEEKS,
+    STATIC_GRAPH_CONFIG,
     range_selector,
     section_card,
     slice_weeks,
@@ -111,13 +112,13 @@ def _charts(weeks: list[dict]):
     return [
         dbc.Row(
             [
-                dbc.Col(section_card("Weekly TSS by Sport", dcc.Graph(figure=_weekly_tss_figure(weeks), config={"displayModeBar": False})), lg=6),
-                dbc.Col(section_card("Weekly Hours by Sport", dcc.Graph(figure=_weekly_hours_figure(weeks), config={"displayModeBar": False})), lg=6),
+                dbc.Col(section_card("Weekly TSS by Sport", dcc.Graph(figure=_weekly_tss_figure(weeks), config=STATIC_GRAPH_CONFIG)), lg=6),
+                dbc.Col(section_card("Weekly Hours by Sport", dcc.Graph(figure=_weekly_hours_figure(weeks), config=STATIC_GRAPH_CONFIG)), lg=6),
             ]
         ),
         dbc.Row(
             [
-                dbc.Col(section_card("Fitness & Fatigue Trend", dcc.Graph(figure=_load_figure(weeks), config={"displayModeBar": False})), lg=12),
+                dbc.Col(section_card("Fitness & Fatigue Trend", dcc.Graph(figure=_load_figure(weeks), config=STATIC_GRAPH_CONFIG)), lg=12),
             ]
         ),
     ]

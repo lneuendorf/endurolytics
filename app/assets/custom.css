@@ -84,7 +84,13 @@
   transform: scaleX(1);
 }
 
-/* --- Date-range selector (pill buttons) --- */
+/* --- Date-range selector (dropdown) --- */
+.range-dropdown {
+  min-width: 150px;
+  max-width: 220px;
+}
+
+/* Legacy pill styling kept for any remaining radio-style selectors. */
 .range-selector .btn {
   border-radius: 999px;
   border-color: #ced4da;
@@ -105,4 +111,115 @@
   border-color: #2ed3be;
   background: linear-gradient(90deg, rgba(162, 228, 54, 0.35) 0%, rgba(46, 211, 190, 0.35) 100%);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* --- Mobile: prevent horizontal page scroll/overflow --- */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+#page-content {
+  overflow-x: hidden;
+}
+
+/* --- Themed controls: match the lime -> teal logo gradient --- */
+:root {
+  --brand-lime: #a2e436;
+  --brand-teal: #2ed3be;
+  --brand-lime-dark: #8fce27;
+  --brand-teal-dark: #23b7a4;
+  --brand-gradient: linear-gradient(90deg, #a2e436 0%, #2ed3be 100%);
+  --brand-gradient-dark: linear-gradient(90deg, #8fce27 0%, #23b7a4 100%);
+}
+
+/* Primary buttons -> brand gradient */
+.btn-primary,
+.btn-primary:disabled,
+.btn-primary.disabled {
+  background: var(--brand-gradient);
+  border: none;
+  color: #10261a;
+  font-weight: 600;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary:not(:disabled):not(.disabled):active {
+  background: var(--brand-gradient-dark);
+  border: none;
+  color: #10261a;
+  box-shadow: 0 2px 8px rgba(46, 211, 190, 0.35);
+}
+
+.btn-primary:focus,
+.btn-primary:focus-visible {
+  box-shadow: 0 0 0 0.2rem rgba(46, 211, 190, 0.4);
+}
+
+/* Secondary / pagination buttons -> outlined teal */
+.btn-secondary {
+  background-color: transparent;
+  border: 1px solid var(--brand-teal);
+  color: #1c8478;
+  font-weight: 600;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active,
+.btn-secondary:not(:disabled):not(.disabled):active {
+  background: var(--brand-gradient);
+  border-color: transparent;
+  color: #10261a;
+  box-shadow: 0 2px 8px rgba(46, 211, 190, 0.3);
+}
+
+.btn-secondary:focus,
+.btn-secondary:focus-visible {
+  box-shadow: 0 0 0 0.2rem rgba(46, 211, 190, 0.35);
+}
+
+.btn-secondary:disabled,
+.btn-secondary.disabled {
+  background-color: transparent;
+  border-color: #ced4da;
+  color: #adb5bd;
+}
+
+/* Toggle switch (dbc.Switch) -> lime when on */
+.form-check-input:checked {
+  background-color: var(--brand-lime);
+  border-color: var(--brand-lime);
+}
+
+.form-check-input:focus {
+  border-color: var(--brand-teal);
+  box-shadow: 0 0 0 0.2rem rgba(46, 211, 190, 0.3);
+}
+
+/* Text inputs (dbc.Input) -> teal focus ring */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--brand-teal);
+  box-shadow: 0 0 0 0.2rem rgba(46, 211, 190, 0.25);
+}
+
+/* Range dropdown (dcc.Dropdown) -> brand accents */
+.range-dropdown .Select-control,
+.range-dropdown .is-focused:not(.is-open) > .Select-control {
+  border-color: var(--brand-teal);
+  box-shadow: 0 0 0 0.15rem rgba(46, 211, 190, 0.2);
+}
+
+.range-dropdown .Select-menu-outer .VirtualizedSelectOption.VirtualizedSelectFocusedOption {
+  background: linear-gradient(90deg, rgba(162, 228, 54, 0.28) 0%, rgba(46, 211, 190, 0.28) 100%);
+  color: #10261a;
+}
+
+.range-dropdown .Select-menu-outer .VirtualizedSelectSelectedOption {
+  color: #1c8478;
+  font-weight: 600;
 }
