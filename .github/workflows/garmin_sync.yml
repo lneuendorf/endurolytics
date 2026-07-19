@@ -1,9 +1,10 @@
 name: Garmin sync
 
 on:
-  # Run at the top of every hour (UTC). Adjust as needed.
+  # Run at the top of every hour during 7am-10pm America/Chicago (fixed UTC;
+  # aligns in summer, shifts by 1 hour in winter due to DST).
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 0-3,12-23 * * *"
   # Allow manual runs from the Actions tab.
   workflow_dispatch:
 
