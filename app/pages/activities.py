@@ -175,17 +175,16 @@ def layout():
 @callback(
     Output("activities-page", "data"),
     Input("activities-sport-filter", "value"),
-    Input("activities-sort", "data"),
     Input("activities-prev", "n_clicks"),
     Input("activities-next", "n_clicks"),
     State("activities-page", "data"),
     prevent_initial_call=True,
 )
-def update_page(sport_filter, sort_state, prev_clicks, next_clicks, current_page):
-    """Track the current page, resetting to the first page on filter or sort change."""
+def update_page(sport_filter, prev_clicks, next_clicks, current_page):
+    """Track the current page, resetting to the first page on filter change."""
     trigger = ctx.triggered_id
     current_page = current_page or 0
-    if trigger in ("activities-sport-filter", "activities-sort"):
+    if trigger == "activities-sport-filter":
         return 0
     if trigger == "activities-next":
         return current_page + 1
@@ -194,16 +193,19 @@ def update_page(sport_filter, sort_state, prev_clicks, next_clicks, current_page
     return current_page
 
 
+# One callback updates both the sort state and resets to page 1, so a header
+# click costs a single store round-trip instead of two chained ones.
 @callback(
     Output("activities-sort", "data"),
+    Output("activities-page", "data", allow_duplicate=True),
     Input({"type": "activities-sort-col", "index": ALL}, "n_clicks"),
     State("activities-sort", "data"),
     prevent_initial_call=True,
 )
 def update_activities_sort(n_clicks, current):
     if not ctx.triggered or not ctx.triggered[0]["value"]:
-        return no_update
-    return next_sort_state(ACTIVITIES_COLUMNS, current, ctx.triggered_id["index"])
+        return no_update, no_update
+    return next_sort_state(ACTIVITIES_COLUMNS, current, ctx.triggered_id["index"]), 0
 
 
 @callback(

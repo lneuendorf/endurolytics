@@ -102,7 +102,8 @@ def layout(engine: Engine):
             html.H1("Weekly", className="mt-2 mb-4"),
             dcc.Store(id="weekly-sort", data=DEFAULT_WEEKLY_SORT),
             range_selector("weekly-range"),
-            html.Div(id="weekly-content"),
+            html.Div(id="weekly-graph-container"),
+            html.Div(id="weekly-table-container"),
         ],
         fluid=True,
     )
@@ -121,16 +122,30 @@ def update_weekly_sort(n_clicks, current):
 
 
 @callback(
-    Output("weekly-content", "children"),
+    Output("weekly-graph-container", "children"),
     Input("weekly-range", "value"),
-    Input("weekly-sort", "data"),
 )
-def update_weekly_content(range_weeks, sort_state):
+def update_weekly_graph(range_weeks):
     weeks = get_weekly_training(get_engine())
     if not weeks:
         return dbc.Alert("No training data yet.", color="info")
     weeks = slice_weeks(weeks, range_weeks if range_weeks is not None else DEFAULT_RANGE_WEEKS)
-    return [
-        section_card("Weekly TSS by Sport", dcc.Graph(figure=_tss_by_sport_figure(weeks), config=STATIC_GRAPH_CONFIG)),
-        section_card("Weekly Detail", _weekly_table(weeks, sort_state or DEFAULT_WEEKLY_SORT)),
-    ]
+    return section_card(
+        "Weekly TSS by Sport",
+        dcc.Graph(figure=_tss_by_sport_figure(weeks), config=STATIC_GRAPH_CONFIG),
+    )
+
+
+# Sorting a column only re-renders this (small) table, so the chart above it is
+# left untouched — no heavy re-transmit and no layout shift under the cursor.
+@callback(
+    Output("weekly-table-container", "children"),
+    Input("weekly-range", "value"),
+    Input("weekly-sort", "data"),
+)
+def update_weekly_table(range_weeks, sort_state):
+    weeks = get_weekly_training(get_engine())
+    if not weeks:
+        return None
+    weeks = slice_weeks(weeks, range_weeks if range_weeks is not None else DEFAULT_RANGE_WEEKS)
+    return section_card("Weekly Detail", _weekly_table(weeks, sort_state or DEFAULT_WEEKLY_SORT))

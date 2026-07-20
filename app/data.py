@@ -9,6 +9,7 @@ processed tables are empty so the app still renders on a fresh database.
 from __future__ import annotations
 
 import os
+import time
 from typing import Any
 
 from sqlalchemy.engine import Engine
@@ -20,6 +21,29 @@ from database.connection import create_engine_from_url
 from database.models import Activity, ActivityMetrics, WeeklyTraining
 
 _engine: Engine | None = None
+
+# Short-lived cache for the read-only dashboard queries. Pagination and column
+# sorting fire the same query repeatedly; caching keeps those interactions snappy
+# without a DB round-trip each time. Data only changes when the (separate) sync
+# process runs, so a small TTL keeps things fresh enough.
+_READ_CACHE: dict[tuple, tuple[float, Any]] = {}
+_READ_CACHE_TTL = 30.0
+
+
+def _cache_get(key: tuple) -> Any | None:
+    entry = _READ_CACHE.get(key)
+    if entry is not None and (time.monotonic() - entry[0]) < _READ_CACHE_TTL:
+        return entry[1]
+    return None
+
+
+def _cache_put(key: tuple, value: Any) -> None:
+    _READ_CACHE[key] = (time.monotonic(), value)
+
+
+def clear_read_cache() -> None:
+    """Drop cached query results (e.g. after a sync writes new data)."""
+    _READ_CACHE.clear()
 
 
 def get_engine() -> Engine:
@@ -56,6 +80,10 @@ def _summary_to_weekly(summary: dict[str, Any]) -> dict[str, Any]:
 
 def get_weekly_training(engine: Engine) -> list[dict[str, Any]]:
     """Return weekly training rollups ordered by week (oldest first)."""
+    cached = _cache_get(("weekly",))
+    if cached is not None:
+        return cached
+
     with Session(engine) as session:
         rows = (
             session.query(WeeklyTraining)
@@ -63,10 +91,13 @@ def get_weekly_training(engine: Engine) -> list[dict[str, Any]]:
             .all()
         )
         if rows:
-            return [row.to_dict() for row in rows]
+            result = [row.to_dict() for row in rows]
+        else:
+            # Fallback: compute on the fly when nothing has been processed yet.
+            result = [_summary_to_weekly(s) for s in aggregate_weekly_activity_summaries(engine)]
 
-    # Fallback: compute on the fly when nothing has been processed yet.
-    return [_summary_to_weekly(s) for s in aggregate_weekly_activity_summaries(engine)]
+    _cache_put(("weekly",), result)
+    return result
 
 
 def get_activities_with_metrics(
@@ -76,6 +107,10 @@ def get_activities_with_metrics(
 
     ``discipline`` optionally filters to ``run`` / ``bike`` / ``swim``.
     """
+    cached = _cache_get(("activities", discipline, limit))
+    if cached is not None:
+        return cached
+
     with Session(engine) as session:
         rows = (
             session.query(Activity, ActivityMetrics)
@@ -108,4 +143,5 @@ def get_activities_with_metrics(
                 "tss_method": metric.tss_method if metric else None,
             }
         )
+    _cache_put(("activities", discipline, limit), results)
     return results
