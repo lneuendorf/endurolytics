@@ -223,3 +223,21 @@ body {
   color: #1c8478;
   font-weight: 600;
 }
+
+/* --- Sortable table headers --- */
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+.sortable-th:hover {
+  color: var(--brand-teal);
+  background-color: rgba(46, 211, 190, 0.08);
+}
+
+.sortable-th .sort-arrow {
+  color: var(--brand-teal);
+  font-size: 0.72em;
+}

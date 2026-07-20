@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import dash_bootstrap_components as dbc
-from dash import Input, Output, State, callback, ctx, dcc, html
+from dash import ALL, Input, Output, State, callback, ctx, dcc, html, no_update
 
-from app.components import section_card
+from app.components import next_sort_state, section_card, sort_rows, sortable_table
 from app.data import get_activities_with_metrics, get_engine
 from app.utils import get_distance_display, seconds_to_time_string
 
@@ -26,27 +26,92 @@ def _seconds_to_pace(seconds: float | None) -> str:
     return f"{total_seconds // 60}:{total_seconds % 60:02d}"
 
 
-def _activity_effort_display(activity: dict) -> str:
-    discipline = activity.get("discipline")
+def _bike_power(activity: dict) -> float | None:
+    """Normalized power (falling back to average power) for bike activities."""
+    if activity.get("discipline") != "bike":
+        return None
+    return activity.get("normalized_power") or activity.get("avg_power")
+
+
+def _run_pace_seconds(activity: dict) -> float | None:
+    """Run pace in seconds per mile, or ``None`` when not a measurable run."""
+    if activity.get("discipline") != "run":
+        return None
     duration_seconds = activity.get("duration_seconds") or 0
     distance_meters = activity.get("distance_meters") or 0
-
-    if discipline == "bike":
-        power = activity.get("normalized_power") or activity.get("avg_power")
-        return f"{power:.0f} W" if power is not None else "-"
-
     if not duration_seconds or not distance_meters:
-        return "-"
+        return None
+    return duration_seconds / (distance_meters / 1609.344)
 
-    if discipline == "run":
-        pace_seconds_per_mile = duration_seconds / (distance_meters / 1609.344)
-        return f"{_seconds_to_pace(pace_seconds_per_mile)} /mi"
 
-    if discipline == "swim":
-        pace_seconds_per_100yd = duration_seconds / (distance_meters / 91.44)
-        return f"{_seconds_to_pace(pace_seconds_per_100yd)} /100yd"
+def _swim_pace_seconds(activity: dict) -> float | None:
+    """Swim pace in seconds per 100 yards, or ``None`` when not a measurable swim."""
+    if activity.get("discipline") != "swim":
+        return None
+    duration_seconds = activity.get("duration_seconds") or 0
+    distance_meters = activity.get("distance_meters") or 0
+    if not duration_seconds or not distance_meters:
+        return None
+    return duration_seconds / (distance_meters / 91.44)
 
-    return "-"
+
+def _np_display(activity: dict) -> str:
+    power = _bike_power(activity)
+    return f"{power:.0f} W" if power is not None else "-"
+
+
+def _run_pace_display(activity: dict) -> str:
+    seconds = _run_pace_seconds(activity)
+    return f"{_seconds_to_pace(seconds)} /mi" if seconds is not None else "-"
+
+
+def _swim_pace_display(activity: dict) -> str:
+    seconds = _swim_pace_seconds(activity)
+    return f"{_seconds_to_pace(seconds)} /100yd" if seconds is not None else "-"
+
+
+def _distance_cell(activity: dict):
+    distance_value, distance_unit = get_distance_display(activity["sport"], activity.get("distance_meters"))
+    return f"{distance_value} {distance_unit}"
+
+
+ACTIVITIES_COLUMNS = [
+    {"key": "date", "label": "Date", "default_dir": "desc",
+     "sort": lambda a: a.get("date"),
+     "render": lambda a: a.get("date") or "-"},
+    {"key": "activity_name", "label": "Activity Name", "default_dir": "asc",
+     "sort": lambda a: (a.get("activity_name") or "").lower() or None,
+     "render": lambda a: a.get("activity_name") or "-"},
+    {"key": "sport", "label": "Sport", "default_dir": "asc",
+     "sort": lambda a: (a.get("sport") or "").lower() or None,
+     "render": lambda a: a.get("sport") or "-"},
+    {"key": "duration_seconds", "label": "Duration", "default_dir": "desc",
+     "sort": lambda a: a.get("duration_seconds"),
+     "render": lambda a: seconds_to_time_string(a.get("duration_seconds"))},
+    {"key": "distance_meters", "label": "Distance", "align": "end", "default_dir": "desc",
+     "sort": lambda a: a.get("distance_meters"),
+     "render": _distance_cell},
+    {"key": "np", "label": "NP", "align": "end", "default_dir": "desc",
+     "sort": _bike_power,
+     "render": _np_display},
+    {"key": "run_pace", "label": "Run Pace", "align": "end", "default_dir": "asc",
+     "sort": _run_pace_seconds,
+     "render": _run_pace_display},
+    {"key": "swim_pace", "label": "Swim Pace", "align": "end", "default_dir": "asc",
+     "sort": _swim_pace_seconds,
+     "render": _swim_pace_display},
+    {"key": "avg_hr", "label": "Avg HR", "align": "end", "default_dir": "desc",
+     "sort": lambda a: a.get("avg_hr"),
+     "render": lambda a: f"{a.get('avg_hr'):.0f}" if a.get("avg_hr") is not None else "-"},
+    {"key": "tss", "label": "TSS", "align": "end", "default_dir": "desc",
+     "sort": lambda a: a.get("tss"),
+     "render": lambda a: f"{a.get('tss'):.0f}" if a.get("tss") is not None else "-"},
+    {"key": "intensity_factor", "label": "IF", "align": "end", "default_dir": "desc",
+     "sort": lambda a: a.get("intensity_factor"),
+     "render": lambda a: f"{a.get('intensity_factor'):.2f}" if a.get("intensity_factor") is not None else "-"},
+]
+
+DEFAULT_ACTIVITIES_SORT = {"col": "date", "dir": "desc"}
 
 
 def layout():
@@ -71,6 +136,7 @@ def layout():
                 ]
             ),
             dcc.Store(id="activities-page", data=0),
+            dcc.Store(id="activities-sort", data=DEFAULT_ACTIVITIES_SORT),
             section_card("Activity History", html.Div(id="activities-table-container")),
             dbc.Row(
                 [
@@ -109,16 +175,17 @@ def layout():
 @callback(
     Output("activities-page", "data"),
     Input("activities-sport-filter", "value"),
+    Input("activities-sort", "data"),
     Input("activities-prev", "n_clicks"),
     Input("activities-next", "n_clicks"),
     State("activities-page", "data"),
     prevent_initial_call=True,
 )
-def update_page(sport_filter, prev_clicks, next_clicks, current_page):
-    """Track the current page, resetting to the first page on filter change."""
+def update_page(sport_filter, sort_state, prev_clicks, next_clicks, current_page):
+    """Track the current page, resetting to the first page on filter or sort change."""
     trigger = ctx.triggered_id
     current_page = current_page or 0
-    if trigger == "activities-sport-filter":
+    if trigger in ("activities-sport-filter", "activities-sort"):
         return 0
     if trigger == "activities-next":
         return current_page + 1
@@ -128,14 +195,27 @@ def update_page(sport_filter, prev_clicks, next_clicks, current_page):
 
 
 @callback(
+    Output("activities-sort", "data"),
+    Input({"type": "activities-sort-col", "index": ALL}, "n_clicks"),
+    State("activities-sort", "data"),
+    prevent_initial_call=True,
+)
+def update_activities_sort(n_clicks, current):
+    if not ctx.triggered or not ctx.triggered[0]["value"]:
+        return no_update
+    return next_sort_state(ACTIVITIES_COLUMNS, current, ctx.triggered_id["index"])
+
+
+@callback(
     Output("activities-table-container", "children"),
     Output("activities-page-info", "children"),
     Output("activities-prev", "disabled"),
     Output("activities-next", "disabled"),
     Input("activities-sport-filter", "value"),
     Input("activities-page", "data"),
+    Input("activities-sort", "data"),
 )
-def update_activities_table(sport_filter, page):
+def update_activities_table(sport_filter, page, sort_state):
     """Render one page of the activity table for the selected discipline."""
     engine = get_engine()
     discipline = None if sport_filter in (None, "all") else sport_filter
@@ -143,6 +223,9 @@ def update_activities_table(sport_filter, page):
 
     if not activities:
         return dbc.Alert("No activities found.", color="info"), "", True, True
+
+    sort_state = sort_state or DEFAULT_ACTIVITIES_SORT
+    activities = sort_rows(activities, ACTIVITIES_COLUMNS, sort_state)
 
     page = page or 0
     total = len(activities)
@@ -152,56 +235,7 @@ def update_activities_table(sport_filter, page):
     end = start + _PAGE_SIZE
     page_activities = activities[start:end]
 
-    table_rows = []
-    for activity in page_activities:
-        distance_value, distance_unit = get_distance_display(
-            activity["sport"], activity.get("distance_meters")
-        )
-        tss = activity.get("tss")
-        intensity = activity.get("intensity_factor")
-
-        table_rows.append(
-            html.Tr(
-                [
-                    html.Td(activity.get("date") or "-"),
-                    html.Td(activity.get("activity_name") or "-"),
-                    html.Td(activity.get("sport") or "-"),
-                    html.Td(seconds_to_time_string(activity.get("duration_seconds"))),
-                    html.Td(f"{distance_value} {distance_unit}", className="text-end"),
-                    html.Td(_activity_effort_display(activity), className="text-end"),
-                    html.Td(
-                        f"{activity.get('avg_hr'):.0f}" if activity.get("avg_hr") is not None else "-",
-                        className="text-end",
-                    ),
-                    html.Td(f"{tss:.0f}" if tss is not None else "-", className="text-end"),
-                    html.Td(f"{intensity:.2f}" if intensity is not None else "-", className="text-end"),
-                ]
-            )
-        )
-
-    header = html.Thead(
-        html.Tr(
-            [
-                html.Th("Date"),
-                html.Th("Activity Name"),
-                html.Th("Sport"),
-                html.Th("Duration"),
-                html.Th("Distance", className="text-end"),
-                html.Th("Pace / NP", className="text-end"),
-                html.Th("Avg HR", className="text-end"),
-                html.Th("TSS", className="text-end"),
-                html.Th("IF", className="text-end"),
-            ]
-        )
-    )
-
-    table = dbc.Table(
-        [header, html.Tbody(table_rows)],
-        striped=True,
-        hover=True,
-        responsive=True,
-        className="align-middle mb-0",
-    )
+    table = sortable_table(page_activities, ACTIVITIES_COLUMNS, sort_state, "activities-sort-col")
 
     page_info = f"Showing {start + 1}\u2013{min(end, total)} of {total}"
     return table, page_info, page == 0, end >= total
