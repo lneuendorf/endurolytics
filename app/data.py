@@ -26,7 +26,7 @@ def get_engine() -> Engine:
     """Return a process-wide database engine."""
     global _engine
     if _engine is None:
-        _engine = create_engine_from_url(os.getenv("DATABASE_URL", "sqlite:///endurolytics.db"))
+        _engine = create_engine_from_url(os.getenv("DATABASE_URL", "sqlite:///enduralytics.db"))
     return _engine
 
 

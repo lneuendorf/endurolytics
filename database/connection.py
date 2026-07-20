@@ -22,7 +22,7 @@ def normalize_database_url(url: str) -> str:
 
 
 def create_engine_from_url(database_url: str | None = None):
-    url = database_url or os.getenv("DATABASE_URL", "sqlite:///endurolytics.db")
+    url = database_url or os.getenv("DATABASE_URL", "sqlite:///enduralytics.db")
     url = normalize_database_url(url)
     if url.startswith("postgresql"):
         return create_engine(url, pool_pre_ping=True)

@@ -1,4 +1,4 @@
-# Endurolytics dashboard image (Render / any container host).
+# Enduralytics dashboard image (Render / any container host).
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

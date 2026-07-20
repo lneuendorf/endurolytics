@@ -1,8 +1,8 @@
-# Endurolytics — Project Planning Document
+# Enduralytics — Project Planning Document
 
 ## Overview
 
-Endurolytics is a personal endurance training analytics platform designed to analyze long-course triathlon training progression over time.
+Enduralytics is a personal endurance training analytics platform designed to analyze long-course triathlon training progression over time.
 
 The goal is not to replace Garmin Connect or TrainingPeaks, but to provide a deeper view into:
 
@@ -13,7 +13,7 @@ The goal is not to replace Garmin Connect or TrainingPeaks, but to provide a dee
 * Long-term Ironman preparation
 * Performance trends
 
-The primary question Endurolytics should answer:
+The primary question Enduralytics should answer:
 
 > "Am I training appropriately and progressing toward my endurance goals?"
 
@@ -21,7 +21,7 @@ The primary question Endurolytics should answer:
 
 # High-Level Architecture
 
-Endurolytics will consist of two separate processes:
+Enduralytics will consist of two separate processes:
 
 ## 1. Data Pipeline
 
@@ -75,13 +75,13 @@ Use a single repository.
 Repository:
 
 ```
-endurolytics/
+enduralytics/
 ```
 
 Structure:
 
 ```
-endurolytics/
+enduralytics/
 
 ├── app/
 │   ├── app.py
@@ -162,7 +162,7 @@ endurolytics/
 
 ## Goal
 
-Automatically update Endurolytics data without requiring a local computer.
+Automatically update Enduralytics data without requiring a local computer.
 
 Pipeline schedule:
 

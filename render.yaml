@@ -1,8 +1,8 @@
-# Render deployment for the Endurolytics dashboard.
+# Render deployment for the Enduralytics dashboard.
 # Docs: https://render.com/docs/blueprint-spec
 services:
   - type: web
-    name: endurolytics-dashboard
+    name: enduralytics-dashboard
     runtime: python
     plan: free
     region: oregon

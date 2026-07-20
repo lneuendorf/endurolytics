@@ -1,4 +1,4 @@
-# Endurolytics
+# Enduralytics
 
 ## Garmin import
 

@@ -10,13 +10,13 @@ from app.pages import activities, glossary, overview, settings, training_load, w
 
 
 def _brand(app: Dash):
-    """Modern wordmark: gradient pulse badge + two-tone 'Endurolytics'."""
+    """Modern wordmark: gradient pulse badge + two-tone 'Enduralytics'."""
     return html.A(
         [
             html.Img(src=app.get_asset_url("logo.svg"), className="brand-logo__badge"),
             html.Span(
                 [
-                    html.Span("Enduro", className="brand-logo__accent"),
+                    html.Span("Endura", className="brand-logo__accent"),
                     html.Span("lytics", className="brand-logo__rest"),
                 ],
                 className="brand-logo__wordmark",
@@ -33,7 +33,7 @@ def create_app() -> Dash:
         __name__,
         suppress_callback_exceptions=True,
     )
-    app.title = "Endurolytics"
+    app.title = "Enduralytics"
     app._favicon = "logo.svg"
 
     engine = get_engine()

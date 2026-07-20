@@ -21,7 +21,7 @@ from database.models import Base
 config = context.config
 
 # Prefer the runtime DATABASE_URL (Neon/Render/local) over the ini placeholder.
-_database_url = os.getenv("DATABASE_URL", "sqlite:///endurolytics.db")
+_database_url = os.getenv("DATABASE_URL", "sqlite:///enduralytics.db")
 config.set_main_option("sqlalchemy.url", normalize_database_url(_database_url))
 
 # Interpret the config file for Python logging.

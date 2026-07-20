@@ -37,7 +37,7 @@ def login_with_retries(client, tokenstore_path: str | None = None, retries: int 
 def main() -> None:
     email = os.getenv("GARMIN_EMAIL")
     password = os.getenv("GARMIN_PASSWORD")
-    database_url = os.getenv("DATABASE_URL", "sqlite:///endurolytics.db")
+    database_url = os.getenv("DATABASE_URL", "sqlite:///enduralytics.db")
 
     if not email or not password:
         raise RuntimeError("Set GARMIN_EMAIL and GARMIN_PASSWORD before running the sync")
