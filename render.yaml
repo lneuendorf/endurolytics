@@ -9,11 +9,17 @@ services:
     buildCommand: pip install -r requirements.txt
     # Apply migrations on deploy, then serve the Dash app with gunicorn.
     startCommand: alembic upgrade head && gunicorn app.app:server --bind 0.0.0.0:$PORT --workers 2 --timeout 120
-    healthCheckPath: /
+    healthCheckPath: /healthz
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
       # Set to your Neon PostgreSQL connection string in the Render dashboard.
       - key: DATABASE_URL
+        sync: false
+      # Signs the login session cookie. Use Render's "Generate" button.
+      - key: SECRET_KEY
+        generateValue: true
+      # Passcode gate. Generate the hash locally: `python -m app.auth`.
+      - key: APP_PASSCODE_HASH
         sync: false

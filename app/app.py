@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html, callback, ctx
 from dash.dependencies import Input, Output, State
 
+from app.auth import configure_auth
 from app.data import get_engine
 # Import pages at module load so their @callback definitions register with Dash
 # before the server starts serving the callback dependency graph.
@@ -36,6 +37,9 @@ def create_app() -> Dash:
     app.title = "Enduralytics"
     app._favicon = "logo.svg"
 
+    # Attach the single-user passcode gate to the underlying Flask server.
+    configure_auth(app.server)
+
     engine = get_engine()
 
     app.layout = html.Div([
@@ -53,6 +57,7 @@ def create_app() -> Dash:
                             dbc.NavLink("Activities", href="/activities", active="exact"),
                             dbc.NavLink("Glossary", href="/glossary", active="exact"),
                             dbc.NavLink("Settings", href="/settings", active="exact"),
+                            dbc.NavLink("Sign out", href="/logout", external_link=True),
                         ], navbar=True, className="ms-auto"),
                         id="navbar-collapse",
                         is_open=False,
